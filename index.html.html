@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>聽音拼字 - YMCA 國中英文</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet"/>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{min-height:100vh;background:linear-gradient(135deg,#f5f0ff 0%,#e8f4ff 50%,#fff5f5 100%);font-family:'Nunito',sans-serif;padding:24px 16px 48px;}
+    #app{display:flex;flex-direction:column;align-items:center;max-width:500px;margin:0 auto;}
+    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+    @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}40%{transform:translateX(7px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+    @keyframes popIn{0%{transform:scale(0.6);opacity:0}70%{transform:scale(1.1)}100%{transform:scale(1);opacity:1}}
+    @keyframes correctPop{0%{transform:scale(1)}50%{transform:scale(1.35)}100%{transform:scale(1)}}
+    @keyframes cfFall{0%{transform:translateY(0) rotate(0deg);opacity:1}100%{transform:translateY(110vh) rotate(720deg);opacity:0}}
+    @keyframes slideUp{0%{transform:translateY(24px);opacity:0}100%{transform:translateY(0);opacity:1}}
+    @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+    .float{animation:float 2.8s ease-in-out infinite;display:inline-block;}
+    h1{font-family:'Fredoka One',cursive;font-size:44px;background:linear-gradient(135deg,#6c63ff,#fd79a8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1.1;}
+    h2{font-family:'Fredoka One',cursive;font-size:20px;color:#b8b0d8;letter-spacing:3px;}
+    /* 出版社 Tab */
+    .pub-tabs{display:flex;gap:8px;margin-bottom:16px;width:100%;max-width:480px;}
+    .pub-tab{flex:1;font-family:'Fredoka One',cursive;font-size:17px;border:none;border-radius:14px;padding:12px 8px;cursor:pointer;transition:all .18s;letter-spacing:1px;}
+    .pub-tab:hover{transform:scale(1.04);}
+    /* 頁數按鈕 */
+    .page-btns{display:flex;flex-wrap:wrap;gap:8px;width:100%;max-width:480px;margin-bottom:20px;justify-content:flex-start;}
+    .page-btn{font-family:'Fredoka One',cursive;font-size:13px;border:2px solid transparent;border-radius:12px;padding:8px 14px;cursor:pointer;transition:all .18s;display:flex;flex-direction:column;align-items:center;gap:2px;}
+    .page-btn:hover{transform:scale(1.06);}
+    .page-btn .pcount{font-family:'Nunito',sans-serif;font-size:11px;opacity:.8;}
+    /* Unit card */
+    .unit-card{border-radius:20px;padding:16px;cursor:pointer;transition:transform .18s,box-shadow .18s;display:flex;align-items:center;gap:14px;width:100%;border:2px solid rgba(0,0,0,0.08);animation:slideUp .3s ease both;margin-bottom:10px;}
+    .unit-card:hover{transform:translateY(-4px) scale(1.02);}
+    .unit-card:active{transform:scale(0.97);}
+    /* 拼字 */
+    .card{border-radius:28px;padding:26px 36px;width:100%;max-width:440px;text-align:center;animation:popIn .4s ease;margin-bottom:20px;}
+    .card-zh{font-family:'Fredoka One',cursive;font-size:36px;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,0.18);line-height:1.1;}
+    .card-sub{font-size:12px;color:rgba(255,255,255,0.75);margin-top:6px;font-weight:700;}
+    .speak-btn{font-family:'Fredoka One',cursive;border:none;border-radius:18px;padding:13px 26px;cursor:pointer;font-size:17px;display:flex;align-items:center;gap:8px;transition:transform .15s;margin-bottom:24px;}
+    .speak-btn:hover{transform:scale(1.06);}
+    .pulsing{animation:pulse .6s ease-in-out infinite;}
+    .boxes{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;max-width:440px;margin-bottom:12px;}
+    .letter-box{width:50px;height:58px;border-radius:14px;font-family:'Fredoka One',cursive;font-size:24px;text-align:center;border:3px solid #d8d8f0;outline:none;background:#fff;color:#333;transition:border-color .2s,background .2s,transform .15s;caret-color:transparent;text-transform:uppercase;}
+    .letter-box:focus{border-color:#6c63ff;background:#f8f7ff;transform:scale(1.1);}
+    .letter-box.correct{background:#d5f5e3;border-color:#27ae60;color:#1a7a40;animation:correctPop .3s ease;}
+    .letter-box.shake{animation:shake .45s ease;background:#fde8e8;border-color:#e74c3c;}
+    .progress-bar-bg{width:100%;max-width:440px;height:9px;background:#eee;border-radius:8px;margin-bottom:24px;overflow:hidden;}
+    .progress-bar{height:100%;border-radius:8px;transition:width .5s ease;}
+    .topbar{display:flex;justify-content:space-between;align-items:center;width:100%;margin-bottom:14px;}
+    .nbtn{font-family:'Fredoka One',cursive;font-size:16px;border:none;border-radius:14px;padding:10px 22px;cursor:pointer;transition:transform .15s;}
+    .nbtn:hover{transform:scale(1.05);}
+    .result-box{border-radius:24px;padding:20px 32px;margin:16px 0;display:flex;flex-direction:column;align-items:center;gap:8px;width:100%;max-width:440px;}
+    .confetti-container{position:fixed;inset:0;pointer-events:none;z-index:9999;overflow:hidden;}
+    .word-done{font-family:'Fredoka One',cursive;font-size:24px;margin-top:16px;animation:popIn .3s ease;text-align:center;}
+  </style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+/* ══ 完整296字資料 ══ */
+const ALL_WORDS_RAW = [
+  {w:"old",z:"老的;舊的",p:17,pub:"康軒",lesson:"Get Ready (1)"},
+  {w:"mouth",z:"嘴巴",p:17,pub:"康軒",lesson:"Get Ready (1)"},
+  {w:"nose",z:"鼻子",p:17,pub:"康軒",lesson:"Get Ready (1)"},
+  {w:"eyes",z:"雙眼",p:17,pub:"康軒",lesson:"Get Ready (1)"},
+  {w:"ear",z:"耳朵",p:17,pub:"康軒",lesson:"Get Ready (1)"},
+  {w:"English",z:"英文",p:17,pub:"康軒",lesson:"Get Ready (1)"},
+  {w:"tree",z:"樹",p:17,pub:"康軒",lesson:"Get Ready (1)"},
+  {w:"key",z:"鑰匙",p:17,pub:"康軒",lesson:"Get Ready (1)"},
+  {w:"who",z:"誰",p:17,pub:"康軒",lesson:"Get Ready (1)"},
+  {w:"where",z:"哪裡",p:17,pub:"康軒",lesson:"Get Ready (1)"},
+  {w:"what",z:"什麼",p:17,pub:"康軒",lesson:"Get Ready (1)"},
+  {w:"how",z:"如何",p:17,pub:"康軒",lesson:"Get Ready (1)"},
+  {w:"and",z:"和",p:17,pub:"康軒",lesson:"Get Ready (1)"},
+  {w:"the",z:"這;那",p:17,pub:"康軒",lesson:"Get Ready (1)"},
+  {w:"write",z:"寫",p:18,pub:"康軒",lesson:"Get Ready (2)"},
+  {w:"welcome",z:"歡迎",p:18,pub:"康軒",lesson:"Get Ready (2)"},
+  {w:"right",z:"對的",p:18,pub:"康軒",lesson:"Get Ready (2)"},
+  {w:"wash",z:"洗",p:18,pub:"康軒",lesson:"Get Ready (2)"},
+  {w:"close",z:"關上;蓋上",p:18,pub:"康軒",lesson:"Get Ready (2)"},
+  {w:"play",z:"玩",p:18,pub:"康軒",lesson:"Get Ready (2)"},
+  {w:"look",z:"看",p:18,pub:"康軒",lesson:"Get Ready (2)"},
+  {w:"draw",z:"畫",p:18,pub:"康軒",lesson:"Get Ready (2)"},
+  {w:"open",z:"打開",p:18,pub:"康軒",lesson:"Get Ready (2)"},
+  {w:"Taiwan",z:"臺灣",p:18,pub:"康軒",lesson:"Get Ready (2)"},
+  {w:"walk",z:"走路",p:18,pub:"康軒",lesson:"Get Ready (2)"},
+  {w:"man",z:"男人",p:19,pub:"康軒",lesson:"Lesson 1 (1)"},
+  {w:"again",z:"再一次",p:19,pub:"康軒",lesson:"Lesson 1 (1)"},
+  {w:"class",z:"班級;課程",p:19,pub:"康軒",lesson:"Lesson 1 (1)"},
+  {w:"same",z:"一樣的",p:19,pub:"康軒",lesson:"Lesson 1 (1)"},
+  {w:"classroom",z:"教室",p:19,pub:"康軒",lesson:"Lesson 1 (1)"},
+  {w:"really",z:"真地",p:19,pub:"康軒",lesson:"Lesson 1 (1)"},
+  {w:"our",z:"我們的",p:19,pub:"康軒",lesson:"Lesson 1 (1)"},
+  {w:"handsome",z:"英俊的",p:19,pub:"康軒",lesson:"Lesson 1 (1)"},
+  {w:"young",z:"年輕的",p:19,pub:"康軒",lesson:"Lesson 1 (1)"},
+  {w:"son",z:"兒子",p:19,pub:"康軒",lesson:"Lesson 1 (1)"},
+  {w:"husband",z:"丈夫",p:19,pub:"康軒",lesson:"Lesson 1 (1)"},
+  {w:"wife",z:"妻子",p:19,pub:"康軒",lesson:"Lesson 1 (1)"},
+  {w:"uncle",z:"叔父;舅舅",p:19,pub:"康軒",lesson:"Lesson 1 (1)"},
+  {w:"family",z:"家人;家庭",p:19,pub:"康軒",lesson:"Lesson 1 (1)"},
+  {w:"cousin",z:"堂表兄弟姊妹",p:19,pub:"康軒",lesson:"Lesson 1 (1)"},
+  {w:"daughter",z:"女兒",p:19,pub:"康軒",lesson:"Lesson 1 (1)"},
+  {w:"aunt",z:"姑媽;舅媽",p:19,pub:"康軒",lesson:"Lesson 1 (1)"},
+  {w:"child",z:"孩子",p:19,pub:"康軒",lesson:"Lesson 1 (1)"},
+  {w:"nice",z:"好的",p:20,pub:"康軒",lesson:"Lesson 1 (2)"},
+  {w:"nurse",z:"護理師",p:20,pub:"康軒",lesson:"Lesson 1 (2)"},
+  {w:"cute",z:"可愛的",p:20,pub:"康軒",lesson:"Lesson 1 (2)"},
+  {w:"pet",z:"寵物",p:20,pub:"康軒",lesson:"Lesson 1 (2)"},
+  {w:"doctor",z:"醫生",p:20,pub:"康軒",lesson:"Lesson 1 (2)"},
+  {w:"woman",z:"女人",p:20,pub:"康軒",lesson:"Lesson 1 (2)"},
+  {w:"beautiful",z:"漂亮的;美麗的",p:20,pub:"康軒",lesson:"Lesson 1 (2)"},
+  {w:"cook",z:"廚師;煮",p:20,pub:"康軒",lesson:"Lesson 1 (2)"},
+  {w:"warm",z:"溫暖的",p:20,pub:"康軒",lesson:"Lesson 1 (2)"},
+  {w:"strict",z:"嚴格的",p:20,pub:"康軒",lesson:"Lesson 1 (2)"},
+  {w:"problem",z:"問題",p:20,pub:"康軒",lesson:"Lesson 1 (2)"},
+  {w:"news",z:"消息;新聞",p:20,pub:"康軒",lesson:"Lesson 1 (2)"},
+  {w:"too",z:"也;太",p:20,pub:"康軒",lesson:"Lesson 1 (2)"},
+  {w:"farmer",z:"農夫",p:20,pub:"康軒",lesson:"Lesson 1 (2)"},
+  {w:"rat",z:"大老鼠",p:23,pub:"康軒",lesson:"Lesson 2 (1)"},
+  {w:"rabbit",z:"兔子",p:23,pub:"康軒",lesson:"Lesson 2 (1)"},
+  {w:"dragon",z:"龍",p:23,pub:"康軒",lesson:"Lesson 2 (1)"},
+  {w:"rooster",z:"公雞",p:23,pub:"康軒",lesson:"Lesson 2 (1)"},
+  {w:"horse",z:"馬",p:23,pub:"康軒",lesson:"Lesson 2 (1)"},
+  {w:"goat",z:"山羊",p:23,pub:"康軒",lesson:"Lesson 2 (1)"},
+  {w:"sign",z:"符號",p:23,pub:"康軒",lesson:"Lesson 2 (1)"},
+  {w:"snake",z:"蛇",p:23,pub:"康軒",lesson:"Lesson 2 (1)"},
+  {w:"animal",z:"動物",p:23,pub:"康軒",lesson:"Lesson 2 (1)"},
+  {w:"sheep",z:"綿羊",p:23,pub:"康軒",lesson:"Lesson 2 (1)"},
+  {w:"fox",z:"狐狸",p:23,pub:"康軒",lesson:"Lesson 2 (1)"},
+  {w:"tiger",z:"老虎",p:23,pub:"康軒",lesson:"Lesson 2 (1)"},
+  {w:"monkey",z:"猴子",p:23,pub:"康軒",lesson:"Lesson 2 (1)"},
+  {w:"lion",z:"獅子",p:23,pub:"康軒",lesson:"Lesson 2 (1)"},
+  {w:"mouse",z:"老鼠",p:23,pub:"康軒",lesson:"Lesson 2 (1)"},
+  {w:"bear",z:"熊",p:23,pub:"康軒",lesson:"Lesson 2 (1)"},
+  {w:"zebra",z:"斑馬",p:23,pub:"康軒",lesson:"Lesson 2 (1)"},
+  {w:"different",z:"不同的",p:24,pub:"康軒",lesson:"Lesson 2 (2)"},
+  {w:"lifespan",z:"壽命",p:24,pub:"康軒",lesson:"Lesson 2 (2)"},
+  {w:"only",z:"僅僅;只",p:24,pub:"康軒",lesson:"Lesson 2 (2)"},
+  {w:"but",z:"但是",p:24,pub:"康軒",lesson:"Lesson 2 (2)"},
+  {w:"meter",z:"公尺",p:24,pub:"康軒",lesson:"Lesson 2 (2)"},
+  {w:"very",z:"很;非常",p:24,pub:"康軒",lesson:"Lesson 2 (2)"},
+  {w:"size",z:"尺寸",p:24,pub:"康軒",lesson:"Lesson 2 (2)"},
+  {w:"or",z:"或者",p:24,pub:"康軒",lesson:"Lesson 2 (2)"},
+  {w:"picture",z:"照片;圖畫",p:24,pub:"康軒",lesson:"Lesson 2 (2)"},
+  {w:"people",z:"人們",p:24,pub:"康軒",lesson:"Lesson 2 (2)"},
+  {w:"true",z:"真的;真實的",p:24,pub:"康軒",lesson:"Lesson 2 (2)"},
+  {w:"energetic",z:"充滿活力的",p:24,pub:"康軒",lesson:"Lesson 2 (2)"},
+  {w:"smart",z:"聰明的",p:24,pub:"康軒",lesson:"Lesson 2 (2)"},
+  {w:"elephant",z:"大象",p:24,pub:"康軒",lesson:"Lesson 2 (2)"},
+  {w:"singer",z:"歌手",p:27,pub:"翰林",lesson:"Lesson 1 (1)"},
+  {w:"housewife",z:"家庭主婦",p:27,pub:"翰林",lesson:"Lesson 1 (1)"},
+  {w:"writer",z:"作家",p:27,pub:"翰林",lesson:"Lesson 1 (1)"},
+  {w:"classmate",z:"同學",p:27,pub:"翰林",lesson:"Lesson 1 (1)"},
+  {w:"new",z:"新的",p:27,pub:"翰林",lesson:"Lesson 1 (1)"},
+  {w:"baby",z:"嬰兒",p:28,pub:"翰林",lesson:"Lesson 1 (2)"},
+  {w:"dear",z:"親愛的",p:28,pub:"翰林",lesson:"Lesson 1 (2)"},
+  {w:"brown",z:"棕色(的)",p:31,pub:"翰林",lesson:"Lesson 2 (1)"},
+  {w:"brush",z:"毛筆;筆刷",p:31,pub:"翰林",lesson:"Lesson 2 (1)"},
+  {w:"marker",z:"記號筆",p:31,pub:"翰林",lesson:"Lesson 2 (1)"},
+  {w:"notebook",z:"筆記本",p:31,pub:"翰林",lesson:"Lesson 2 (1)"},
+  {w:"hungry",z:"餓的",p:31,pub:"翰林",lesson:"Lesson 2 (1)"},
+  {w:"sofa",z:"沙發",p:31,pub:"翰林",lesson:"Lesson 2 (1)"},
+  {w:"maybe",z:"可能",p:31,pub:"翰林",lesson:"Lesson 2 (1)"},
+  {w:"cookie",z:"餅乾",p:31,pub:"翰林",lesson:"Lesson 2 (1)"},
+  {w:"gray",z:"灰色(的)",p:31,pub:"翰林",lesson:"Lesson 2 (1)"},
+  {w:"wall",z:"牆壁",p:31,pub:"翰林",lesson:"Lesson 2 (1)"},
+  {w:"house",z:"房子",p:31,pub:"翰林",lesson:"Lesson 2 (1)"},
+  {w:"favorite",z:"最喜愛(的)",p:31,pub:"翰林",lesson:"Lesson 2 (1)"},
+  {w:"color",z:"顏色",p:31,pub:"翰林",lesson:"Lesson 2 (1)"},
+  {w:"kitchen",z:"廚房",p:31,pub:"翰林",lesson:"Lesson 2 (1)"},
+  {w:"purple",z:"紫色(的)",p:31,pub:"翰林",lesson:"Lesson 2 (1)"},
+  {w:"special",z:"特別的",p:32,pub:"翰林",lesson:"Lesson 2 (2)"},
+  {w:"person",z:"人",p:32,pub:"翰林",lesson:"Lesson 2 (2)"},
+  {w:"enough",z:"足夠(的)",p:32,pub:"翰林",lesson:"Lesson 2 (2)"},
+  {w:"above",z:"在上方",p:32,pub:"翰林",lesson:"Lesson 2 (2)"},
+  {w:"inside",z:"在裡面",p:32,pub:"翰林",lesson:"Lesson 2 (2)"},
+  {w:"behind",z:"在後面",p:32,pub:"翰林",lesson:"Lesson 2 (2)"},
+  {w:"between",z:"在之間",p:32,pub:"翰林",lesson:"Lesson 2 (2)"},
+  {w:"near",z:"在附近",p:32,pub:"翰林",lesson:"Lesson 2 (2)"},
+  {w:"bedroom",z:"臥室",p:32,pub:"翰林",lesson:"Lesson 2 (2)"},
+  {w:"table",z:"桌子",p:32,pub:"翰林",lesson:"Lesson 2 (2)"},
+  {w:"bathroom",z:"浴室;廁所",p:32,pub:"翰林",lesson:"Lesson 2 (2)"},
+  {w:"gift",z:"禮物",p:32,pub:"翰林",lesson:"Lesson 2 (2)"},
+  {w:"thirty",z:"三十",p:36,pub:"南一",lesson:"Starter (1)"},
+  {w:"twenty",z:"二十",p:36,pub:"南一",lesson:"Starter (1)"},
+  {w:"twelve",z:"十二",p:36,pub:"南一",lesson:"Starter (1)"},
+  {w:"eleven",z:"十一",p:36,pub:"南一",lesson:"Starter (1)"},
+  {w:"nine",z:"九",p:36,pub:"南一",lesson:"Starter (1)"},
+  {w:"eight",z:"八",p:36,pub:"南一",lesson:"Starter (1)"},
+  {w:"seven",z:"七",p:36,pub:"南一",lesson:"Starter (1)"},
+  {w:"six",z:"六",p:36,pub:"南一",lesson:"Starter (1)"},
+  {w:"five",z:"五",p:36,pub:"南一",lesson:"Starter (1)"},
+  {w:"ten",z:"十",p:36,pub:"南一",lesson:"Starter (1)"},
+  {w:"three",z:"三",p:36,pub:"南一",lesson:"Starter (1)"},
+  {w:"four",z:"四",p:36,pub:"南一",lesson:"Starter (1)"},
+  {w:"welcome",z:"歡迎",p:36,pub:"南一",lesson:"Starter (1)"},
+  {w:"one",z:"一",p:36,pub:"南一",lesson:"Starter (1)"},
+  {w:"two",z:"二",p:36,pub:"南一",lesson:"Starter (1)"},
+  {w:"doctor",z:"醫生",p:37,pub:"南一",lesson:"Starter (2)"},
+  {w:"name",z:"名字",p:37,pub:"南一",lesson:"Starter (2)"},
+  {w:"game",z:"遊戲",p:37,pub:"南一",lesson:"Starter (2)"},
+  {w:"desk",z:"書桌",p:37,pub:"南一",lesson:"Starter (2)"},
+  {w:"student",z:"學生",p:37,pub:"南一",lesson:"Starter (2)"},
+  {w:"teacher",z:"老師",p:37,pub:"南一",lesson:"Starter (2)"},
+  {w:"sister",z:"姊姊;妹妹",p:37,pub:"南一",lesson:"Starter (2)"},
+  {w:"food",z:"食物",p:37,pub:"南一",lesson:"Starter (2)"},
+  {w:"nurse",z:"護士",p:37,pub:"南一",lesson:"Starter (2)"},
+  {w:"apple",z:"蘋果",p:37,pub:"南一",lesson:"Starter (2)"},
+  {w:"black",z:"黑色(的)",p:37,pub:"南一",lesson:"Starter (2)"},
+  {w:"orange",z:"橘色(的)",p:37,pub:"南一",lesson:"Starter (2)"},
+  {w:"white",z:"白色(的)",p:37,pub:"南一",lesson:"Starter (2)"},
+  {w:"yellow",z:"黃色(的)",p:37,pub:"南一",lesson:"Starter (2)"},
+  {w:"red",z:"紅色(的)",p:37,pub:"南一",lesson:"Starter (2)"},
+  {w:"blue",z:"藍色(的)",p:37,pub:"南一",lesson:"Starter (2)"},
+  {w:"fifty",z:"五十",p:37,pub:"南一",lesson:"Starter (2)"},
+  {w:"forty",z:"四十",p:37,pub:"南一",lesson:"Starter (2)"},
+  {w:"egg",z:"蛋",p:37,pub:"南一",lesson:"Starter (2)"},
+  {w:"right",z:"正確的",p:38,pub:"南一",lesson:"Starter (3)"},
+  {w:"ready",z:"準備好的",p:38,pub:"南一",lesson:"Starter (3)"},
+  {w:"happy",z:"快樂的",p:38,pub:"南一",lesson:"Starter (3)"},
+  {w:"long",z:"長的",p:38,pub:"南一",lesson:"Starter (3)"},
+  {w:"brother",z:"哥哥;弟弟",p:38,pub:"南一",lesson:"Starter (3)"},
+  {w:"time",z:"時間",p:38,pub:"南一",lesson:"Starter (3)"},
+  {w:"zebra",z:"斑馬",p:39,pub:"南一",lesson:"Lesson 1 (1)"},
+  {w:"angry",z:"生氣的",p:39,pub:"南一",lesson:"Lesson 1 (1)"},
+  {w:"ant",z:"螞蟻",p:39,pub:"南一",lesson:"Lesson 1 (1)"},
+  {w:"elephant",z:"大象",p:39,pub:"南一",lesson:"Lesson 1 (1)"},
+  {w:"birthday",z:"生日",p:39,pub:"南一",lesson:"Lesson 1 (1)"},
+  {w:"hippo",z:"河馬",p:39,pub:"南一",lesson:"Lesson 1 (1)"},
+  {w:"goose",z:"鵝",p:39,pub:"南一",lesson:"Lesson 1 (1)"},
+  {w:"bee",z:"蜜蜂",p:39,pub:"南一",lesson:"Lesson 1 (1)"},
+  {w:"picture",z:"圖畫",p:39,pub:"南一",lesson:"Lesson 1 (1)"},
+  {w:"frog",z:"青蛙",p:39,pub:"南一",lesson:"Lesson 1 (1)"},
+  {w:"point",z:"分數",p:39,pub:"南一",lesson:"Lesson 1 (1)"},
+  {w:"show",z:"節目",p:39,pub:"南一",lesson:"Lesson 1 (1)"},
+  {w:"monkey",z:"猴子",p:39,pub:"南一",lesson:"Lesson 1 (1)"},
+  {w:"more",z:"更多的",p:39,pub:"南一",lesson:"Lesson 1 (1)"},
+  {w:"winner",z:"贏家",p:39,pub:"南一",lesson:"Lesson 1 (1)"},
+  {w:"lion",z:"獅子",p:39,pub:"南一",lesson:"Lesson 1 (1)"},
+  {w:"footprint",z:"腳印",p:40,pub:"南一",lesson:"Lesson 1 (2)"},
+  {w:"meat",z:"肉",p:40,pub:"南一",lesson:"Lesson 1 (2)"},
+  {w:"mountain",z:"山",p:40,pub:"南一",lesson:"Lesson 1 (2)"},
+  {w:"smart",z:"聰明的",p:40,pub:"南一",lesson:"Lesson 1 (2)"},
+  {w:"fruit",z:"水果",p:40,pub:"南一",lesson:"Lesson 1 (2)"},
+  {w:"forest",z:"森林",p:40,pub:"南一",lesson:"Lesson 1 (2)"},
+  {w:"hairy",z:"毛茸茸的",p:40,pub:"南一",lesson:"Lesson 1 (2)"},
+  {w:"strong",z:"強壯的",p:40,pub:"南一",lesson:"Lesson 1 (2)"},
+  {w:"dirty",z:"髒的",p:40,pub:"南一",lesson:"Lesson 1 (2)"},
+  {w:"clean",z:"乾淨的",p:40,pub:"南一",lesson:"Lesson 1 (2)"},
+  {w:"clerk",z:"職員",p:44,pub:"南一",lesson:"Lesson 2 (1)"},
+  {w:"actress",z:"女演員",p:44,pub:"南一",lesson:"Lesson 2 (1)"},
+  {w:"hard",z:"困難的",p:44,pub:"南一",lesson:"Lesson 2 (1)"},
+  {w:"late",z:"遲的",p:44,pub:"南一",lesson:"Lesson 2 (1)"},
+  {w:"easy",z:"簡單的",p:44,pub:"南一",lesson:"Lesson 2 (1)"},
+  {w:"famous",z:"有名的",p:44,pub:"南一",lesson:"Lesson 2 (1)"},
+  {w:"postcard",z:"明信片",p:44,pub:"南一",lesson:"Lesson 2 (1)"},
+  {w:"tomorrow",z:"明天",p:44,pub:"南一",lesson:"Lesson 2 (1)"},
+  {w:"lake",z:"湖",p:45,pub:"南一",lesson:"Lesson 2 (2)"},
+  {w:"building",z:"建築物",p:45,pub:"南一",lesson:"Lesson 2 (2)"},
+  {w:"star",z:"明星",p:45,pub:"南一",lesson:"Lesson 2 (2)"},
+  {w:"wonderful",z:"絕妙的",p:45,pub:"南一",lesson:"Lesson 2 (2)"},
+  {w:"still",z:"還;仍然",p:45,pub:"南一",lesson:"Lesson 2 (2)"},
+  {w:"cartoon",z:"卡通",p:45,pub:"南一",lesson:"Lesson 2 (2)"},
+  {w:"founder",z:"創辦者",p:45,pub:"南一",lesson:"Lesson 2 (2)"},
+  {w:"view",z:"景色",p:45,pub:"南一",lesson:"Lesson 2 (2)"},
+  {w:"place",z:"地方",p:45,pub:"南一",lesson:"Lesson 2 (2)"},
+];
+
+const seen = new Set();
+const ALL_WORDS = ALL_WORDS_RAW.filter(({w,p})=>{
+  const k=`${p}-${w.toLowerCase()}`;
+  if(!/^[a-zA-Z]+$/.test(w)||seen.has(k)) return false;
+  seen.add(k); return true;
+});
+
+const PUB_META = {
+  "康軒":{color:"#C0392B",light:"#FDEDEC",pages:[17,18,19,20,23,24]},
+  "翰林":{color:"#2471A3",light:"#EBF5FB",pages:[27,28,31,32]},
+  "南一":{color:"#1E8449",light:"#EAFAF1",pages:[36,37,38,39,40,44,45]},
+};
+const PAGE_LESSON = {};
+ALL_WORDS.forEach(w=>{ if(!PAGE_LESSON[w.p]) PAGE_LESSON[w.p]=w.lesson; });
+
+/* ══ 音效 ══ */
+let audioCtx=null;
+function getCtx(){ if(!audioCtx) audioCtx=new(window.AudioContext||window.webkitAudioContext)(); return audioCtx; }
+function playSuccess(){const c=getCtx();[523,659,784].forEach((f,i)=>{const o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=f;const t=c.currentTime+i*.11;g.gain.setValueAtTime(.25,t);g.gain.exponentialRampToValueAtTime(.001,t+.22);o.start(t);o.stop(t+.22);});}
+function playError(){const c=getCtx(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=160;o.type="sawtooth";g.gain.setValueAtTime(.28,c.currentTime);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+.28);o.start();o.stop(c.currentTime+.28);}
+function playComplete(){const c=getCtx();[523,587,659,698,784,880].forEach((f,i)=>{const o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=f;const t=c.currentTime+i*.09;g.gain.setValueAtTime(.2,t);g.gain.exponentialRampToValueAtTime(.001,t+.28);o.start(t);o.stop(t+.28);});}
+function speakWord(w){if(!window.speechSynthesis)return;window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(w);u.lang="en-US";u.rate=.82;u.pitch=1.1;window.speechSynthesis.speak(u);}
+
+function spawnConfetti(){
+  const c=document.createElement('div');c.className='confetti-container';
+  const cols=["#FF6B6B","#FFD93D","#55EFC4","#74B9FF","#FD79A8","#A29BFE"];
+  for(let i=0;i<22;i++){const p=document.createElement('div');const s=7+Math.random()*8;p.style.cssText=`position:absolute;top:-20px;left:${Math.random()*100}%;width:${s}px;height:${s}px;border-radius:3px;background:${cols[i%6]};animation:cfFall ${.9+Math.random()*.7}s ${Math.random()*.4}s ease-in forwards;`;c.appendChild(p);}
+  document.body.appendChild(c);setTimeout(()=>c.remove(),1800);
+}
+
+/* ══ 狀態 ══ */
+let selPub="康軒", selPage=null, wordList=[], wordIdx=0, letterStates=[], mistakes=0, score=0;
+
+function buildMenu(){
+  const pubM = PUB_META[selPub];
+  const pages = pubM.pages;
+  document.getElementById('app').innerHTML=`
+    <div style="text-align:center;margin-bottom:24px;">
+      <div class="float" style="font-size:68px;">🎧</div>
+      <h1>聽音拼字</h1>
+      <h2>YMCA 國中英文</h2>
+      <div style="font-size:14px;color:#a0a8c0;margin-top:6px;">共 ${ALL_WORDS.length} 個單字 · 依頁數挑戰</div>
+    </div>
+    <div class="pub-tabs" id="pubTabs"></div>
+    <div style="font-family:'Fredoka One',cursive;font-size:15px;color:${pubM.color};margin-bottom:12px;width:100%;max-width:480px;">
+      📄 選擇頁數開始挑戰：
+    </div>
+    <div class="page-btns" id="pageBtns"></div>
+    <div style="margin-top:12px;background:rgba(255,255,255,0.7);border-radius:18px;padding:16px 20px;width:100%;max-width:480px;">
+      <div style="font-family:'Fredoka One',cursive;font-size:15px;color:#6c63ff;margin-bottom:8px;">怎麼玩？</div>
+      <div style="font-size:13px;color:#888;line-height:1.8;">
+        1️⃣ 選版本和頁數<br>
+        2️⃣ 看中文，按 🔊 聽英文發音<br>
+        3️⃣ 依序打入每個字母<br>
+        4️⃣ 答錯格子會抖動，再試一次！<br>
+        5️⃣ 全對過關，零失誤得 ⭐⭐⭐
+      </div>
+    </div>
+  `;
+  // 出版社 tabs
+  const tabs=document.getElementById('pubTabs');
+  ["康軒","翰林","南一"].forEach(pub=>{
+    const m=PUB_META[pub];
+    const btn=document.createElement('button');
+    btn.className='pub-tab';
+    btn.textContent=pub;
+    btn.style.cssText=selPub===pub
+      ? `background:${m.color};color:#fff;box-shadow:0 4px 16px ${m.color}55;`
+      : `background:${m.light};color:${m.color};`;
+    btn.onclick=()=>{ selPub=pub; buildMenu(); };
+    tabs.appendChild(btn);
+  });
+  // 頁數按鈕
+  const btns=document.getElementById('pageBtns');
+  pages.forEach(page=>{
+    const count=ALL_WORDS.filter(w=>w.p===page).length;
+    const lesson=PAGE_LESSON[page]||'';
+    const btn=document.createElement('button');
+    btn.className='page-btn';
+    btn.innerHTML=`<span>P${page}</span><span class="pcount">${lesson}</span><span class="pcount">${count}字</span>`;
+    btn.style.cssText=`background:${pubM.light};color:${pubM.color};border-color:${pubM.color}55;`;
+    btn.onmouseover=()=>btn.style.background=pubM.color+('22');
+    btn.onclick=()=>startUnit(page);
+    btns.appendChild(btn);
+  });
+}
+
+function startUnit(page){
+  selPage=page; wordIdx=0; score=0; mistakes=0;
+  wordList=ALL_WORDS.filter(w=>w.p===page);
+  buildSpell();
+  setTimeout(()=>speakWord(wordList[0].w),400);
+}
+
+function buildSpell(){
+  const word=wordList[wordIdx];
+  const pubM=PUB_META[word.pub];
+  letterStates=word.w.toLowerCase().split('').map(c=>({char:c,status:'empty'}));
+  const pct=Math.round((wordIdx/wordList.length)*100);
+  document.getElementById('app').innerHTML=`
+    <div class="topbar">
+      <button class="nbtn" id="backBtn" style="background:#f0f0ff;color:#6c63ff;">← 回選單</button>
+      <div style="font-family:'Fredoka One',cursive;font-size:15px;color:${pubM.color};">${word.pub} P${selPage} · ${wordIdx+1}/${wordList.length}</div>
+    </div>
+    <div class="progress-bar-bg">
+      <div class="progress-bar" style="width:${pct}%;background:linear-gradient(90deg,${pubM.color},${pubM.color}99);"></div>
+    </div>
+    <div class="card" style="background:${pubM.color};box-shadow:0 16px 48px ${pubM.color}88;">
+      <div style="font-size:18px;color:rgba(255,255,255,0.7);font-weight:700;margin-bottom:6px;">${word.lesson}</div>
+      <div class="card-zh">${word.z}</div>
+      <div class="card-sub">${word.w.length} 個字母</div>
+    </div>
+    <button class="speak-btn" id="speakBtn" style="background:${pubM.light};color:${pubM.color};border:2px solid ${pubM.color}44;">🔊 聽發音</button>
+    <div class="boxes" id="boxes"></div>
+    <div style="font-size:13px;color:#c0c8d8;margin-top:8px;" id="starsHint">✨ 零失誤可得 ⭐⭐⭐</div>
+    <div id="doneMsg"></div>
+  `;
+  document.getElementById('backBtn').onclick=()=>buildMenu();
+  document.getElementById('speakBtn').onclick=()=>{
+    const b=document.getElementById('speakBtn');
+    b.classList.add('pulsing');b.textContent='🔊 播放中...';
+    speakWord(word.w);
+    setTimeout(()=>{b.classList.remove('pulsing');b.innerHTML='🔊 聽發音';},1200);
+  };
+  buildBoxes();
+  setTimeout(()=>focusFirst(),80);
+}
+
+function buildBoxes(){
+  const boxes=document.getElementById('boxes'); if(!boxes) return;
+  boxes.innerHTML='';
+  letterStates.forEach((l,i)=>{
+    const inp=document.createElement('input');
+    inp.type='text';inp.maxLength=2;inp.className='letter-box';
+    if(l.status==='correct'){inp.value=l.char.toUpperCase();inp.readOnly=true;inp.classList.add('correct');}
+    if(l.status==='shake') inp.classList.add('shake');
+    inp.addEventListener('input',e=>handleKey(i,e.target.value));
+    inp.addEventListener('click',()=>{
+      const first=letterStates.findIndex(x=>x.status!=='correct');
+      if(first!==-1&&i!==first) focusBox(first);
+    });
+    boxes.appendChild(inp);
+  });
+}
+function focusFirst(){ focusBox(letterStates.findIndex(l=>l.status!=='correct')); }
+function focusBox(i){ const b=document.querySelectorAll('.letter-box'); if(b[i]) b[i].focus(); }
+
+function handleKey(idx,val){
+  const typed=val.slice(-1).toLowerCase();
+  if(!typed||!/[a-z]/.test(typed)) return;
+  if(typed===letterStates[idx].char){
+    playSuccess();
+    letterStates[idx].status='correct';
+    buildBoxes();
+    const allDone=letterStates.every(l=>l.status==='correct');
+    if(allDone){
+      playComplete();spawnConfetti();
+      const stars=mistakes===0?3:mistakes===1?2:1;
+      score+=stars;
+      const dm=document.getElementById('doneMsg');
+      const pubM=PUB_META[wordList[wordIdx].pub];
+      if(dm) dm.innerHTML=`<div class="word-done" style="background:linear-gradient(135deg,${pubM.color},#fd79a8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">${mistakes===0?'🌟 完美！':'🎉 答對！'} 繼續下一個！</div>`;
+      setTimeout(()=>{
+        const next=wordIdx+1;
+        if(next>=wordList.length) buildResult();
+        else { wordIdx=next; mistakes=0; buildSpell(); setTimeout(()=>speakWord(wordList[next].w),300); }
+      },1700);
+    } else {
+      const next=letterStates.findIndex((l,i2)=>i2>idx&&l.status!=='correct');
+      if(next!==-1) setTimeout(()=>focusBox(next),30);
+    }
+  } else {
+    playError(); mistakes++;
+    letterStates[idx].status='shake'; buildBoxes();
+    const h=document.getElementById('starsHint');
+    if(h) h.textContent=mistakes===1?'一次錯誤 → ⭐⭐':'兩次以上 → ⭐';
+    setTimeout(()=>{ letterStates[idx].status='empty'; buildBoxes(); focusBox(idx); },480);
+  }
+}
+
+function buildResult(){
+  const pubM=PUB_META[wordList[0].pub];
+  const maxScore=wordList.length*3;
+  const pct=score/maxScore;
+  const trophy=pct>=.9?'🏆':pct>=.6?'🥇':'🎮';
+  const msg=pct>=1?'🌟 完美無缺！':pct>=.7?'👏 非常棒！':'💪 繼續練習！';
+  document.getElementById('app').innerHTML=`
+    <div style="text-align:center;width:100%;max-width:440px;">
+      <div class="float" style="font-size:80px;margin-bottom:12px;">${trophy}</div>
+      <h1>關卡完成！</h1>
+      <div style="font-size:14px;color:#a0a8c0;margin-bottom:8px;">${wordList[0].pub} · P${selPage} · ${PAGE_LESSON[selPage]}</div>
+      <div class="result-box" style="background:${pubM.light};border:3px solid ${pubM.color}44;">
+        <div style="font-family:'Fredoka One',cursive;font-size:52px;color:${pubM.color};">${score} <span style="font-size:28px;color:#aaa;">/ ${maxScore}</span></div>
+        <div style="font-size:15px;color:#888;">⭐ 得分（${wordList.length} 字 × 最高3星）</div>
+        <div style="font-size:18px;font-weight:800;color:${pubM.color};margin-top:4px;">${msg}</div>
+      </div>
+      <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:8px;">
+        <button class="nbtn" id="retryBtn" style="background:${pubM.color};color:#fff;font-size:17px;padding:13px 28px;">🔄 再挑戰</button>
+        <button class="nbtn" id="menuBtn" style="background:#f0f0ff;color:#6c63ff;font-size:17px;padding:13px 28px;">🏠 回選單</button>
+      </div>
+    </div>
+  `;
+  document.getElementById('retryBtn').onclick=()=>startUnit(selPage);
+  document.getElementById('menuBtn').onclick=()=>buildMenu();
+}
+
+buildMenu();
+</script>
+</body>
+</html>
